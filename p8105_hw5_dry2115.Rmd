@@ -1,0 +1,21 @@
+---
+title: "p8105_hw5_dry2115"
+author: "Dayoung Yu"
+date: 2018-11-09
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(hexbin)
+library(patchwork)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```

@@ -35,3 +35,28 @@ study_data =
 
 ```
 
+## Problem 2
+
+
+```{r}
+url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
+
+homicide_data = read_csv(file = url) %>%
+  mutate(city_state = str_c(city, state, sep = ", ")) %>%
+  group_by(city_state, disposition) %>%
+  summarize(n = n()) %>% 
+  spread(key = disposition, value = n) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    total_homicides = sum(closed_by_arrest, closed_without_arrest, open_no_arrest, na.rm = TRUE),
+    unsolved_homicides = sum(closed_without_arrest, open_no_arrest, na.rm = TRUE)
+  ) %>%
+  select(city_state, total_homicides, unsolved_homicides)
+
+
+
+
+
+
+```
+

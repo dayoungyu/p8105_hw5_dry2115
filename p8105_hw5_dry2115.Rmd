@@ -8,6 +8,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(rvest)
 library(hexbin)
 library(patchwork)
 
@@ -19,3 +20,18 @@ knitr::opts_chunk$set(
 
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
+
+## Problem 1
+
+```{r}
+study_data = 
+  tibble(file_name = list.files(path = "./data"),
+         file_path = str_c("./data/", file_name),
+         observations = map(file_path, read_csv)) %>%
+  unnest()
+
+  
+
+
+```
+

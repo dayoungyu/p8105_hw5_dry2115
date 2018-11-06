@@ -61,15 +61,19 @@ broom::tidy(prop.test(balt_data$unsolved_homicides, balt_data$total_homicides)) 
   select(estimate, conf.low, conf.high) 
 
 
-homicide_data %>%
+prop_tests = homicide_data %>%
   mutate(prop_test = map2(unsolved_homicides, total_homicides, prop.test),
          prop_test = map(prop_test, broom::tidy)) %>%
   unnest() %>%
   select(city_state, estimate, conf.low, conf.high)
   
 
-
-
+prop_tests %>%
+  ungroup(city_state) %>%
+  mutate(city_state = fct_reorder(city_state, estimate)) %>%
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high))
 
 
 

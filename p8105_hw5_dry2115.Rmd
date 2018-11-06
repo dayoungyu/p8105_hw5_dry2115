@@ -52,7 +52,7 @@ homicide_data = read_csv(file = url) %>%
     unsolved_homicides = sum(closed_without_arrest, open_no_arrest, na.rm = TRUE)
   ) %>%
   select(city_state, total_homicides, unsolved_homicides)
-
+##### get rid of tulsa alabama 
 
 balt_data = homicide_data %>%
   filter(city_state == "Baltimore, MD")
@@ -61,7 +61,11 @@ broom::tidy(prop.test(balt_data$unsolved_homicides, balt_data$total_homicides)) 
   select(estimate, conf.low, conf.high) 
 
 
-
+homicide_data %>%
+  mutate(prop_test = map2(unsolved_homicides, total_homicides, prop.test),
+         prop_test = map(prop_test, broom::tidy)) %>%
+  unnest() %>%
+  select(city_state, estimate, conf.low, conf.high)
   
 
 

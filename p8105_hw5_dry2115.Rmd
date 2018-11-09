@@ -57,14 +57,17 @@ study_data %>%
 Above is a plot showing the observations of each subject over time. The plot was faceted to observe the differences in control arm verses experimental arm. We can see that observations in the control group generally remained the same over time while observations in the experimental group increased.
 
 
-## Problem 2
+### Problem 2
 
+#### Read and clean homicide data
 
-```{r}
+```{r message = FALSE}
+
 url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
 
 homicide_data = read_csv(file = url) %>%
   mutate(city_state = str_c(city, state, sep = ", ")) %>%
+  filter(city_state != "Tulsa, AL") %>%
   group_by(city_state, disposition) %>%
   summarize(n = n()) %>% 
   spread(key = disposition, value = n) %>% 
@@ -74,31 +77,66 @@ homicide_data = read_csv(file = url) %>%
     unsolved_homicides = sum(closed_without_arrest, open_no_arrest, na.rm = TRUE)
   ) %>%
   select(city_state, total_homicides, unsolved_homicides)
-##### get rid of tulsa alabama 
+
+
+```
+
+Homicide data of 50 major U.S. cities were read in by url from the _Washington Post_ GitHub repository. The raw data was a CSV file containing homicide id, victim name, race, age and sex, date reported, location, and case disposition. Each observation described a homicide incident. The raw data were summarized by city, state and disposition where unsolved homicides were defined as "closed without arrest" or "open no arrest".  The one observation at "Tulsa, AL" was filtered out because that city does not exist and was thought to be an error. The recorder may have meant to write "Tulsa, OK", but that assumption could not be made without more evidence.
+
+
+#### Run a proportion test for Baltimore, MD
+
+```{r}
 
 balt_data = homicide_data %>%
   filter(city_state == "Baltimore, MD")
   
-broom::tidy(prop.test(balt_data$unsolved_homicides, balt_data$total_homicides)) %>%
-  select(estimate, conf.low, conf.high) 
+balt_prop = broom::tidy(prop.test(balt_data$unsolved_homicides, balt_data$total_homicides)) %>%
+  select(estimate, conf.low, conf.high) %>%
+  mutate()
+
+balt_prop %>%
+  knitr::kable(digits = 3)
+
+```
+
+The estimated proportion of unsolved homicides in Baltimore is `r round(balt_prop$estimate,3)`, with a 95% confidence interval of (`r round(balt_prop$conf.low,3)`, `r round(balt_prop$conf.high,3)`). This proportion is unexpectedly high (above 50%), and the confidence interval is narrow, indicating high precision.
 
 
+#### Run proportion tests for all cities
+
+```{r}
 prop_tests = homicide_data %>%
   mutate(prop_test = map2(unsolved_homicides, total_homicides, prop.test),
          prop_test = map(prop_test, broom::tidy)) %>%
   unnest() %>%
   select(city_state, estimate, conf.low, conf.high)
-  
+
+prop_tests %>%
+  head(5) %>%
+  knitr::kable(digits = 3)
+
+```
+
+Proportion tests were conducted for all 50 cities to obtain estimate proportions of unsolved homicides and their 95% confidence intervals. The first 5 cities in the dataframe were printed to illustrate.
+
+
+#### Create a plot of estimates and CIs for each city
+
+```{r}
 
 prop_tests %>%
   ungroup(city_state) %>%
   mutate(city_state = fct_reorder(city_state, estimate)) %>%
   ggplot(aes(x = city_state, y = estimate)) +
   geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high))
-
-
-
-
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  theme(axis.text.x = element_text(angle = 80, hjust = 1)) +
+  labs(
+    title = "Estimated proportion of unsolved homicides in 50 major cities",
+    x = "City, State",
+    y = "Estimated proportion"
+  )
 ```
 
+Estimated proportions of unsolved homicides and corresponding error bars for 50 major U.S. cities were plotted above. Cities were organized in increasing proportion. Thus, we can see that Richmond, VA had the lowest proportion of unsolved homicides, and Chicago, IL the highest. It is also interesting that Chicago, IL had a significantly higher proportion than the rest of the cities, and the error bar is the shortest, indicating high precision.

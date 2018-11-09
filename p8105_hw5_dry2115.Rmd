@@ -10,7 +10,6 @@ output: github_document
 library(tidyverse)
 library(rvest)
 library(hexbin)
-library(patchwork)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -21,7 +20,9 @@ knitr::opts_chunk$set(
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
-## Problem 1
+### Problem 1
+
+#### Read and clean the data
 
 ```{r message = FALSE}
 study_data = 
@@ -32,17 +33,29 @@ study_data =
   gather(key = week, value = observation, week_1:week_8) %>%
   mutate(subject = str_replace(file_name, ".csv", ""),
          arm = str_sub(file_name, 1, 3),
-         week = str_replace(week, "week_", "")) %>%
+         week = as.numeric(str_replace(week, "week_", ""))) %>%
   select(subject, arm, week, observation)
 
 
-  
-  
-
-  
-### knitr::kable(digits = 2)
-
 ```
+
+Separate files containing individual subject data were collected to create a single dataframe. _Week_ variables were gathered and a new _subject_ variable containing arm and subject id was created. A separate _arm_ variable was also created to create groups in plots.
+
+#### Create a spaghetti plot of the data
+
+```{r message = FALSE}
+study_data %>%
+  ggplot(aes(x = week, y = observation, color = subject)) +
+  geom_path() + 
+  facet_grid(~arm) +
+  labs(title = "Observation over time by arm") +
+  viridis::scale_color_viridis(
+  name = "subject", 
+  discrete = TRUE)
+```
+
+Above is a plot showing the observations of each subject over time. The plot was faceted to observe the differences in control arm verses experimental arm. We can see that observations in the control group generally remained the same over time while observations in the experimental group increased.
+
 
 ## Problem 2
 

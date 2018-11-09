@@ -23,15 +23,24 @@ theme_set(theme_bw() + theme(legend.position = "bottom"))
 
 ## Problem 1
 
-```{r}
+```{r message = FALSE}
 study_data = 
   tibble(file_name = list.files(path = "./data"),
          file_path = str_c("./data/", file_name),
          observations = map(file_path, read_csv)) %>%
-  unnest()
+  unnest() %>%
+  gather(key = week, value = observation, week_1:week_8) %>%
+  mutate(subject = str_replace(file_name, ".csv", ""),
+         arm = str_sub(file_name, 1, 3),
+         week = str_replace(week, "week_", "")) %>%
+  select(subject, arm, week, observation)
+
 
   
+  
 
+  
+### knitr::kable(digits = 2)
 
 ```
 
